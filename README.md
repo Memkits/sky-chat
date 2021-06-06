@@ -1,30 +1,14 @@
 
-Respo workflow in Calcit-js
+Sky Chat
 ----
 
-> Respo web page based on [calcit-js](https://github.com/calcit-lang/calcit_runner.rs).
+> What if you dont read Chinese characters...
 
-Demo http://repo.calcit-lang.org/respo-calcit-workflow/ .
+Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### Usages
 
-To develop:
-
-```bash
-calcit_runner --emit-js # watching
-
-yarn # to install vite
-yarn vite # watching and running on localhost:3000
-```
-
-calcit-js is using [Calcit Editor](https://github.com/Cirru/calcit-editor).
-
-To build:
-
-```bash
-yarn vite build
-http-server dist/
-```
+_TODO_
 
 ### Workflow
 

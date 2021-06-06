@@ -1,0 +1,21 @@
+
+.cell {
+  background: hsl(0,0%, 98%);
+  background-size: 100% 100%;
+}
+
+.cell-0 {
+  background-image: url(./char-0.png);
+}
+
+.cell-1 {
+  background-image: url(./char-1.png);
+}
+
+.cell-2 {
+  background-image: url(./char-2.png);
+}
+
+.cell-3 {
+  background-image: url(./char-3.png);
+}
