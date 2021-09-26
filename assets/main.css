@@ -1,4 +1,40 @@
 
+body {
+  background-color: white;
+  margin: 0;
+  overscroll-behavior-y: none;
+}
+body::backdrop {
+  background-color: white;
+}
+
+
+body * {
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: hsla(0,0%,100%);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsla(200,100%,76%,0.8);
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+::-webkit-resizer {
+  background-color:transparent;
+}
+
 .cell {
   background: hsl(0,0%, 98%);
   background-size: 100% 100%;
