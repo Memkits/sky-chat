@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {} $ :dispatch-op |app.schema/Op
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
@@ -50,13 +50,13 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ decode-map-as (&map:get reel :store) app.schema/Store
+                store $ assert-type (&map:get reel :store) 'app.schema/Store
                 states store.:states
               div
                 {} $ :style $ merge ui/global ui/fullscreen ui/column
                 comp-header
                 comp-messages store.:messages
-                comp-input $ decode-map-as (>> states :input) app.schema/InputBranch
+                comp-input $ app.schema/read-input-branch $ >> states :input
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -94,12 +94,12 @@
                   :style $ merge ui/textarea ui/expand $ {} (:height 40) (:line-height |24px) (:border :none)
                   :on-input $ fn (event dispatch!)
                     dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content
-                      event-value $ assert-type event $ :: 'Map 'Tag 'Dynamic
+                      event-value $ assert-type event 'respo.schema/RespoEvent
                   :autofocus true
                   :on-keydown $ fn (event dispatch!)
                     when
                       and
-                        = |Enter $ event-key $ assert-type event (:: 'Map 'Tag 'Dynamic)
+                        = |Enter $ event-key $ assert-type event 'respo.schema/RespoEvent
                         not $ blank? content
                       dispatch! $ app.schema/Op :message content
                       dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content |
@@ -175,17 +175,15 @@
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'String
         'event-key $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn event-key (event)
-            assert-type (&map:get event :key) 'String
+          :code $ quote $ defn event-key (event) (assert-type event.:key 'String)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :args $ [] 'respo.schema/RespoEvent
         'event-value $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn event-value (event)
-            assert-type (&map:get event :value) 'String
+          :code $ quote $ defn event-value (event) (assert-type event.:value 'String)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :args $ [] 'respo.schema/RespoEvent
         'generate-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn generate-color (name)
             let
@@ -245,15 +243,15 @@
             :return $ :: 'List 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
-          :require ([] respo-ui.core :as ui)
-            [] respo.core :refer $ [] defcomp <> >> div textarea span list->
-            [] respo.comp.space :refer $ [] =<
-            [] reel.comp.reel :refer $ [] comp-reel
-            [] app.config :refer $ [] dev?
-            [] respo.util.format :refer $ [] hsl
-            [] |string-to-color :default gen-color
-            [] app.schema :as app.schema
-            [] js-ffi.browser :refer $ [] element-focus! query-selector random set-timeout!
+          :require (respo-ui.core :as ui)
+            respo.core :refer $ [] defcomp <> >> div textarea span list->
+            respo.comp.space :refer $ [] =<
+            reel.comp.reel :refer $ [] comp-reel
+            app.config :refer $ [] dev?
+            respo.util.format :refer $ [] hsl
+            |string-to-color :default gen-color
+            app.schema :as app.schema
+            js-ffi.browser :refer $ [] element-focus! query-selector random set-timeout!
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
@@ -312,8 +310,9 @@
           :schema $ :: 'js-ffi.browser/DomElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
-            storage-set! (config/site :storage-key)
-              format-cirru-edn $ decode-map-as (&map:get @*reel :store) app.schema/Store
+            storage-set!
+              option:unwrap $ get config/site :storage-key
+              format-cirru-edn $ &struct:to-map $ assert-type (&map:get @*reel :store) 'app.schema/Store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -353,17 +352,17 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            [] respo.core :refer $ [] render! clear-cache!
-            [] app.comp.container :refer $ [] comp-container
-            [] app.updater :refer $ [] updater
-            [] app.schema :as app.schema
-            [] reel.util :refer $ [] listen-devtools!
-            [] reel.core :refer $ [] reel-updater refresh-reel
-            [] reel.schema :as reel-schema
-            [] app.config :as config
-            [] |./calcit.build-errors :default build-errors
-            [] |bottom-tip :default hud!
-            [] js-ffi.browser :refer $ [] query-selector set-before-unload! set-interval! set-timeout! storage-set!
+            respo.core :refer $ [] render! clear-cache!
+            app.comp.container :refer $ [] comp-container
+            app.updater :refer $ [] updater
+            app.schema :as app.schema
+            reel.util :refer $ [] listen-devtools!
+            reel.core :refer $ [] reel-updater refresh-reel
+            reel.schema :as reel-schema
+            app.config :as config
+            |./calcit.build-errors.mjs :default build-errors
+            |bottom-tip :default hud!
+            js-ffi.browser :refer $ [] query-selector set-before-unload! set-interval! set-timeout! storage-set!
     'app.schema $ %{} 'FileEntry
       :defs $ {}
         'InputBranch $ %{} 'CodeEntry (:doc |)
@@ -406,6 +405,17 @@
             :messages $ :: 'List 'app.schema/Message
           :examples $ []
           :schema $ :: 'StructDef
+        'read-input-branch $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-input-branch (states)
+            InputBranch :cursor
+              option:unwrap $ get states :cursor
+              , :data $ match (get states :data)
+                (:none) (Option :none)
+                (:some data)
+                  Option :some $ if (struct? data) (assert-type data 'app.schema/InputData) (decode-map-as data app.schema/InputData)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.schema/InputBranch)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
@@ -421,7 +431,7 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                decode-map-as (update-states store cursor data) app.schema/Store
+                assert-type (update-states store cursor data) 'app.schema/Store
               (:hydrate-storage data) data
               (:message message)
                 assoc store :messages $ conj store.:messages $ app.schema/Message :token store.:token :message message
@@ -433,5 +443,5 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require
-            [] respo.cursor :refer $ [] update-states
-            [] app.schema :as app.schema
+            respo.cursor :refer $ [] update-states
+            app.schema :as app.schema
