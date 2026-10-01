@@ -34,10 +34,12 @@ Shared font URLs, configuration keys and original server paths remain unchanged.
 COS uploads frontend `dist` resources only.
 
 `yarn dev` compiles Calcit once before starting Vite. For live Calcit edits, run
-`calcit calcit.cirru js -w` in another terminal; no process manager is needed.
+`calcit calcit.cirru -w` in another terminal; no process manager is needed.
 PR previews use `pr/<number>/<run-id>/<attempt>/` to isolate uploads; the
 production prefix is unchanged. The COS action's built-in verification replaces
 the standalone CDN build test; all chat and persistence business tests remain.
+The formal COS action v1.2.0 also checks HTML asset references internally;
+no separate reference checker or repeated public verification is needed.
 
 ### License
 
