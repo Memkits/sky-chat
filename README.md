@@ -27,7 +27,7 @@ input/send/clear flows, whole-store updates, DOM adapters and persistence.
 The original storage key is `workflow`, not the repository name. Startup does
 not restore storage; this existing behavior is unchanged.
 
-Build with `VITE_BASE_URL=https://cos-sh.tiye.me/Memkits/sky-chat/pr/ yarn vite build`
+Build with `VITE_BASE_URL=https://cos-sh.tiye.me/Memkits/sky-chat/pr/8/ yarn vite build`
 with public upload verification handled by cos-upload-action's built-in verify
 settings, without an extra CDN checker.
 Shared font URLs, configuration keys and original server paths remain unchanged.
