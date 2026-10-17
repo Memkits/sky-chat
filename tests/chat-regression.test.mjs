@@ -5,16 +5,16 @@ import * as c from "../js-out/calcit.core.mjs";
 import { store, Op, InputData, read_input_branch } from "../js-out/app.schema.mjs";
 import { updater } from "../js-out/app.updater.mjs";
 import * as app from "../js-out/app.comp.container.mjs";
-import { reel } from "../js-out/reel.schema.mjs";
+import { new_reel } from "../js-out/reel.typed.mjs";
 import { RespoEvent } from "../js-out/respo.schema.mjs";
-import { component_$q_, component_tree } from "../js-out/respo.util.detect.mjs";
+import { child_pair_value, component_$q_, component_tree } from "../js-out/respo.util.detect.mjs";
 import { make_string } from "../js-out/respo.render.html.mjs";
 const t = c.init_tags(["store", "states", "data", "content", "cursor", "messages", "token", "message", "rename", "input", "event", "children", "keydown", "click"]);
 const map = c._$n__$M_;
 const read = (value, key) => c.option_$o_unwrap(c.get(value, t[key]));
 const op = (key, ...args) => c._PCT__$o__$o_(Op, t[key], ...args);
 const inputData = (content) => c._$n__PCT__$M_(InputData, t.content, content);
-const root = (state) => c.assoc(reel, t.store, state);
+const root = (state) => new_reel(state);
 const event = (values) => c._$n__PCT__$M_(RespoEvent, ...RespoEvent.fields.flatMap((field) => [field, values[field.value] ?? null]));
 function handlers(node, kind, found = []) {
   if (component_$q_(node)) return handlers(c.option_$o_unwrap(component_tree(node)), kind, found);
@@ -24,7 +24,7 @@ function handlers(node, kind, found = []) {
     if (c.option_$o_some_$q_(handler)) found.push(c.option_$o_unwrap(handler));
   }
   const children = c.get(node, t.children);
-  if (c.option_$o_some_$q_(children)) for (const pair of c.option_$o_unwrap(children).toArray()) handlers(c.option_$o_unwrap(c.nth(pair, 1)), kind, found);
+  if (c.option_$o_some_$q_(children)) for (const pair of c.option_$o_unwrap(children).toArray()) handlers(child_pair_value(pair), kind, found);
   return found;
 }
 test("actual initial typed Store renders the chat and empty input", () => {
@@ -145,7 +145,10 @@ test("real main persistence preserves the original workflow key and typed messag
       querySelector(selector) { assert.equal(selector, ".app"); return { fixture: "mount" }; },
       createElement() { return { getContext() { return { measureText() { return { width: 0 }; } }; } }; },
     };
-    globalThis.localStorage = { setItem(key, value) { writes.push([key, value]); } };
+    globalThis.localStorage = {
+      length: 0, clear() {}, getItem() { return null; }, key() { return null; }, removeItem() {},
+      setItem(key, value) { writes.push([key, value]); },
+    };
     globalThis.window = { localStorage: globalThis.localStorage };
     const main = await import("../js-out/app.main.mjs");
     main.dispatch_$x_(op("rename", "Saved token"));
