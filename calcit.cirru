@@ -5,22 +5,16 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
       :type-slots $ {} $ :dispatch-op |app.schema/Op
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
-        'FullscreenHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait FullscreenHost
-            .request-fullscreen! $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'app.comp.container/FullscreenHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-          :schema $ :: 'Trait
         'ScrollHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait ScrollHost
-            .scroll-into-view-if-needed! $ :: 'Fn $ {} (:return 'Unit)
+            .!scrollIntoViewIfNeeded $ :: 'Fn $ {}
               :args $ [] 'app.comp.container/ScrollHost
+              :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ :: 'Trait
@@ -29,10 +23,10 @@
             let
                 points $ ->
                   turn-codes ([]) code
-                  section-by 2
+                  chunks 2
                   map $ fn (pair)
                     let
-                        numbers $ assert-type pair $ :: 'List 'Number
+                        numbers pair
                       +
                         * 2 $ option:unwrap-or (first numbers) 0
                         option:unwrap-or (last numbers) 0
@@ -50,18 +44,17 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ assert-type (&map:get reel :store) 'app.schema/Store
+                store $ reel :store
                 states store.:states
               div
                 {} $ :style $ merge ui/global ui/fullscreen ui/column
                 comp-header
                 comp-messages store.:messages
                 comp-input $ app.schema/read-input-branch $ >> states :input
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                when dev? $ comp-reel (>> states :reel) (reel-view/view-data reel) ({})
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'app.schema/Reel
-            :features $ #{} :js-ffi
+            :args $ [] $ :: 'reel.typed/State 'app.schema/Op 'app.schema/Store
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
@@ -93,13 +86,12 @@
                 textarea $ {} (:value content) (:placeholder |Message...)
                   :style $ merge ui/textarea ui/expand $ {} (:height 40) (:line-height |24px) (:border :none)
                   :on-input $ fn (event dispatch!)
-                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content
-                      event-value $ assert-type event 'respo.schema/RespoEvent
+                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content (event-value event)
                   :autofocus true
                   :on-keydown $ fn (event dispatch!)
                     when
                       and
-                        = |Enter $ event-key $ assert-type event 'respo.schema/RespoEvent
+                        = |Enter $ event-key event
                         not $ blank? content
                       dispatch! $ app.schema/Op :message content
                       dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content |
@@ -175,22 +167,24 @@
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'String
         'event-key $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn event-key (event) (assert-type event.:key 'String)
+          :code $ quote $ defn event-key (event)
+            decode-map-as
+              .unwrap $ get event :key
+              , 'String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'respo.schema/RespoEvent
+            :args $ [] 'Dynamic
         'event-value $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn event-value (event) (assert-type event.:value 'String)
+          :code $ quote $ defn event-value (event)
+            decode-map-as
+              .unwrap $ get event :value
+              , 'String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'respo.schema/RespoEvent
+            :args $ [] 'Dynamic
         'generate-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn generate-color (name)
-            let
-                generate $ unsafe-coerce gen-color $ :: 'Fn
-                  {} (:return 'String)
-                    :args $ [] 'String
-              generate name
+            decode-map-as (gen-color name) 'String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String
@@ -208,8 +202,7 @@
         'request-fullscreen! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn request-fullscreen! ()
             match (query-selector |body)
-              (:some body)
-                .request-fullscreen! $ unsafe-coerce body 'app.comp.container/FullscreenHost
+              (:some body) (element-request-fullscreen! body)
               (:none) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -219,8 +212,9 @@
           :code $ quote $ defn scroll-last! ()
             match (query-selector "|#message-area > :last-child")
               (:some element)
-                .scroll-into-view-if-needed! $ unsafe-coerce element 'app.comp.container/ScrollHost
+                .!scrollIntoViewIfNeeded $ js-cast element 'app.comp.container/ScrollHost
               (:none) (println "|no message target")
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -244,14 +238,15 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require (respo-ui.core :as ui)
-            respo.core :refer $ [] defcomp <> >> div textarea span list->
-            respo.comp.space :refer $ [] =<
-            reel.comp.reel :refer $ [] comp-reel
-            app.config :refer $ [] dev?
-            respo.util.format :refer $ [] hsl
+            respo.core :refer $ defcomp <> >> div textarea span list->
+            respo.comp.space :refer $ =<
+            reel.comp.reel :refer $ comp-reel
+            app.config :refer $ dev?
+            respo.util.format :refer $ hsl
             |string-to-color :default gen-color
             app.schema :as app.schema
-            js-ffi.browser :refer $ [] element-focus! query-selector random set-timeout!
+            js-ffi.browser :refer $ element-focus! query-selector random set-timeout! element-request-fullscreen!
+            reel.typed-compat :as reel-view
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
@@ -273,22 +268,28 @@
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel
-            -> reel-schema/reel (assoc :base app.schema/store) (assoc :store app.schema/store)
+          :code $ quote $ defref *reel (typed/new-reel app.schema/store)
           :examples $ []
-          :schema $ :: 'Ref 'app.schema/Reel
+          :schema $ :: 'Ref $ :: 'reel.typed/State 'app.schema/Op 'app.schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            reset! *reel $ assert-type (reel-updater updater @*reel op) 'app.schema/Reel
+            if (enum? op)
+              reset! *reel $ match (typed/decode-control op)
+                (:some control) (typed/apply-control updater @*reel control)
+                (:none)
+                  typed/record-op updater @*reel (app.schema/decode-op op) (generate-id!) (shared/now-ms)
+              raise "|Expected Enum operation"
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (load-console-formatter!)
             println "|Running mode:" $ if config/dev? |dev |release
             render-app!
-            add-watch *reel :changes $ fn (reel previous) (render-app!)
+            add-watch! *reel :changes $ fn (reel previous) (render-app!)
             listen-devtools! |a dispatch!
             set-before-unload! $ fn (event) (persist-storage!)
             repeat! 60 persist-storage!
@@ -305,14 +306,15 @@
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
-            option:unwrap $ query-selector |.app
+            narrow-element $ .unwrap $ query-selector |.app
           :examples $ []
-          :schema $ :: 'js-ffi.browser/DomElementHost
+          :schema $ :: 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             storage-set!
-              option:unwrap $ get config/site :storage-key
-              format-cirru-edn $ &struct:to-map $ assert-type (&map:get @*reel :store) 'app.schema/Store
+              .unwrap $ get config/site :storage-key
+              format-cirru-edn $ &struct:to-map $ @*reel :store
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -320,11 +322,12 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (remove-watch *reel :changes) (clear-cache!)
-                add-watch *reel :changes $ fn (reel previous) (render-app!)
-                reset! *reel $ assert-type (refresh-reel @*reel app.schema/store updater) 'app.schema/Reel
+              do (remove-watch! *reel :changes) (clear-cache!)
+                add-watch! *reel :changes $ fn (reel previous) (render-app!)
+                reset! *reel $ typed/refresh updater @*reel app.schema/store
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -352,17 +355,18 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            respo.core :refer $ [] render! clear-cache!
-            app.comp.container :refer $ [] comp-container
-            app.updater :refer $ [] updater
+            respo.core :refer $ render! clear-cache!
+            app.comp.container :refer $ comp-container
+            app.updater :refer $ updater
             app.schema :as app.schema
-            reel.util :refer $ [] listen-devtools!
-            reel.core :refer $ [] reel-updater refresh-reel
-            reel.schema :as reel-schema
+            reel.util :refer $ listen-devtools!
             app.config :as config
             |./calcit.build-errors.mjs :default build-errors
             |bottom-tip :default hud!
-            js-ffi.browser :refer $ [] query-selector set-before-unload! set-interval! set-timeout! storage-set!
+            js-ffi.browser :refer $ query-selector set-before-unload! set-interval! set-timeout! storage-set!
+            reel.typed :as typed
+            js-ffi.shared :as shared
+            respo.ffi.browser :refer $ narrow-element
     'app.schema $ %{} 'FileEntry
       :defs $ {}
         'InputBranch $ %{} 'CodeEntry (:doc |)
@@ -385,37 +389,48 @@
             :hydrate-storage 'app.schema/Store
             :message 'String
             :rename 'String
-            :reel/toggle
-            :reel/recall 'Number
-            :reel/run
-            :reel/step
-            :reel/merge
-            :reel/reset
-            :reel/remove 'Number
           :examples $ []
           :schema $ :: 'EnumDef
-        'Reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def Reel &unit
-          :examples $ []
-          :schema $ :: 'Map 'Tag 'Dynamic
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ :: 'Map 'Tag 'Dynamic
+            :states $ :: 'Map 'Dynamic 'Dynamic
             :token 'String
             :messages $ :: 'List 'app.schema/Message
           :examples $ []
           :schema $ :: 'StructDef
+        'decode-op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-op (message)
+            match message
+              (:states cursor value)
+                Op :states
+                  decode-map-as cursor $ :: 'List 'Dynamic
+                  , value
+              (:hydrate-storage data)
+                Op :hydrate-storage $ decode-map-as
+                  if (struct? data) (&struct:to-map data) data
+                  , 'app.schema/Store
+              (:message text)
+                Op :message $ decode-map-as text 'String
+              (:rename name)
+                Op :rename $ decode-map-as name 'String
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.schema/Op)
+            :args $ [] 'Enum
         'read-input-branch $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-input-branch (states)
             InputBranch :cursor
-              option:unwrap $ get states :cursor
+              decode-map-as
+                .unwrap $ get states :cursor
+                :: 'List 'Dynamic
               , :data $ match (get states :data)
                 (:none) (Option :none)
                 (:some data)
-                  Option :some $ if (struct? data) (assert-type data 'app.schema/InputData) (decode-map-as data app.schema/InputData)
+                  Option :some $ decode-map-as
+                    if (struct? data) (&struct:to-map data) data
+                    , 'app.schema/InputData
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'app.schema/InputBranch)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :args $ [] $ :: 'Map 'Dynamic 'Dynamic
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
@@ -431,17 +446,17 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                assert-type (update-states store cursor data) 'app.schema/Store
+                assoc store :states $ decode-map-as
+                  assoc-in (store :states) (conj cursor :data) data
+                  :: 'Map 'Dynamic 'Dynamic
               (:hydrate-storage data) data
               (:message message)
-                assoc store :messages $ conj store.:messages $ app.schema/Message :token store.:token :message message
+                assoc store :messages $ conj (store :messages)
+                  app.schema/Message :token (store :token) :message message
               (:rename token) (assoc store :token token)
-              _ $ do (println "|unknown store:" op) store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'app.schema/Store)
-            :args $ [] 'app.schema/Store 'Enum 'String 'Number
+            :args $ [] 'app.schema/Store 'app.schema/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require
-            respo.cursor :refer $ [] update-states
-            app.schema :as app.schema
+          :require $ app.schema :as app.schema
