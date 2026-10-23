@@ -23,7 +23,7 @@ Chinese character coloring, example messages and existing TODO behavior remain.
 Validate with `calcit calcit.cirru --check-only --all-defs`, all five public
 namespace checks, `calcit calcit.cirru fix --workflow strict --verify`
 and deprecated-call checks, then `yarn build` and
-`node --test tests/*.test.mjs`. Tests exercise actual typed Respo events,
+`node --test tests/*.test.mjs`. Tests exercise Respo's real Map event shape,
 input/send/clear flows, whole-store updates, DOM adapters and persistence.
 The original storage key is `workflow`, not the repository name. Startup does
 not restore storage; this existing behavior is unchanged.
@@ -31,12 +31,15 @@ not restore storage; this existing behavior is unchanged.
 正式模块使用精确 tag：Reel 0.6.41、Respo 0.16.124、UI 0.8.0、JS-FFI 0.2.5。
 升级后重新安装依赖、重启开发服务并刷新页面，不混用旧 runtime。
 本轮迁移 3 处旧 Option helper 到 `.unwrap-or`，不改变默认值与字符算法；
-全部 schema、两处页面 `hud!` 和原 9 项业务测试保留。
+除两个内部事件适配器收紧为真实 `Map<Tag,Dynamic>` 参数外，其他 schema 不变；
+两个回调入口先受检解码 Map，再读取 String 载荷。两处页面 `hud!` 保留。
+原 9 项业务测试和断言保留，只把错误的 RespoEvent Struct 夹具改成真实 Map 形状，
+不将单独导出的 Struct 当作 DOM 回调载荷，详见 [Respo #275](https://github.com/Respo/respo.calcit/issues/275)。
 CI 明确要求完整 strict 状态 passed 且诊断为空，不仅检查命令退出码。
 正式 Linux CI 与实际页面验收待完成；不把版本声明更新等同迁移验收通过。
 内部使用真实 `reel.typed/State<Op,Store>` 和名义 Op，不再用 Unit 冒充 Reel Map。
 Store、Message、InputData 仍是真实 Struct，输入分支接受旧 Map 和当前 Struct；
-混合 key 的 UI 状态及事件解码入口保留必要 Dynamic 边界（分析仍有 4 处），不伪装零债务。
+混合 key 的 UI 状态及异构事件 Map 值保留必要 Dynamic 边界，不伪装零债务。
 字符编码算法未改，退役 `section-by` 别名并使用 `chunks`。
 
 原有 9 项业务测试保留，只适配 typed Reel、ChildPair 遍历及真实 StorageHost 合同。
