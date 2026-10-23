@@ -86,12 +86,13 @@
                 textarea $ {} (:value content) (:placeholder |Message...)
                   :style $ merge ui/textarea ui/expand $ {} (:height 40) (:line-height |24px) (:border :none)
                   :on-input $ fn (event dispatch!)
-                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content (event-value event)
+                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content
+                      event-value $ decode-map-as event $ :: 'Map 'Tag 'Dynamic
                   :autofocus true
                   :on-keydown $ fn (event dispatch!)
                     when
                       and
-                        = |Enter $ event-key event
+                        = |Enter $ event-key $ decode-map-as event (:: 'Map 'Tag 'Dynamic)
                         not $ blank? content
                       dispatch! $ app.schema/Op :message content
                       dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content |
@@ -173,7 +174,7 @@
               , 'String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'event-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event-value (event)
             decode-map-as
@@ -181,7 +182,7 @@
               , 'String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'generate-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn generate-color (name)
             decode-map-as (gen-color name) 'String
