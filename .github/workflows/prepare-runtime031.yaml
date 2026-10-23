@@ -1,0 +1,53 @@
+name: Prepare isolated Sky Chat acceptance
+on:
+  push:
+    branches: [prepare/sky-chat-runtime031]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: corepack enable && corepack prepare yarn@4.18.0 --activate
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          caps-version: "0.1.1"
+          deps-file: deps.cirru
+      - name: Validate exact source and formal graph
+        run: |
+          set -euo pipefail
+          mkdir -p acceptance
+          test "$(git hash-object calcit.cirru)" = 478ea1f9ef4325e8a3d96f3134fc7f68edf892c0
+          caps --strict --ci
+          yarn install --immutable
+          caps verify --toolchain
+          calcit calcit.cirru edit format
+          git diff --exit-code -- calcit.cirru
+          calcit calcit.cirru --check-only --all-defs --format json > acceptance/all-defs.json
+          calcit calcit.cirru fix --workflow strict --verify --format json > acceptance/strict.json
+          jq -e '.data.workflow.status == "passed" and .diagnostics == []' acceptance/strict.json
+          calcit calcit.cirru analyze quality --format json > acceptance/quality.json
+      - name: Build original application and run original tests
+        env:
+          VITE_BASE_URL: ./
+        run: |
+          set -euo pipefail
+          yarn build
+          node --test tests/*.test.mjs
+          cp -R dist acceptance/dist
+          git diff --exit-code -- calcit.cirru tests/chat-regression.test.mjs
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: sky-chat-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: acceptance
+          if-no-files-found: error
+          retention-days: 7
