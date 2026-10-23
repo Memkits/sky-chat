@@ -8,7 +8,7 @@ import * as app from "../js-out/app.comp.container.mjs";
 import { new_reel } from "../js-out/reel.typed.mjs";
 import { child_pair_value, component_$q_, component_tree } from "../js-out/respo.util.detect.mjs";
 import { make_string } from "../js-out/respo.render.html.mjs";
-const t = c.init_tags(["store", "states", "data", "content", "cursor", "messages", "token", "message", "rename", "input", "event", "children", "keydown", "click", "value", "key"]);
+const t = c.init_tags(["store", "states", "data", "content", "cursor", "messages", "token", "message", "rename", "input", "event", "children", "keydown", "click", "type", "value", "key"]);
 const map = c._$n__$M_;
 const read = (value, key) => c.option_$o_unwrap(c.get(value, t[key]));
 const op = (key, ...args) => c._PCT__$o__$o_(Op, t[key], ...args);
