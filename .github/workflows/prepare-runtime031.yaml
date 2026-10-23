@@ -29,6 +29,7 @@ jobs:
           caps --strict --ci
           yarn install --immutable
           caps verify --toolchain
+          calcit calcit.cirru query def respo.schema/RespoEvent --format json > acceptance/respo-event.json
           calcit calcit.cirru edit format
           git diff --exit-code -- calcit.cirru
           calcit calcit.cirru --check-only --all-defs --format json > acceptance/all-defs.json
