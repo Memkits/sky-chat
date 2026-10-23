@@ -6,16 +6,16 @@ import { store, Op, InputData, read_input_branch } from "../js-out/app.schema.mj
 import { updater } from "../js-out/app.updater.mjs";
 import * as app from "../js-out/app.comp.container.mjs";
 import { new_reel } from "../js-out/reel.typed.mjs";
-import { RespoEvent } from "../js-out/respo.schema.mjs";
 import { child_pair_value, component_$q_, component_tree } from "../js-out/respo.util.detect.mjs";
 import { make_string } from "../js-out/respo.render.html.mjs";
-const t = c.init_tags(["store", "states", "data", "content", "cursor", "messages", "token", "message", "rename", "input", "event", "children", "keydown", "click"]);
+const t = c.init_tags(["store", "states", "data", "content", "cursor", "messages", "token", "message", "rename", "input", "event", "children", "keydown", "click", "type", "value", "key"]);
 const map = c._$n__$M_;
 const read = (value, key) => c.option_$o_unwrap(c.get(value, t[key]));
 const op = (key, ...args) => c._PCT__$o__$o_(Op, t[key], ...args);
 const inputData = (content) => c._$n__PCT__$M_(InputData, t.content, content);
 const root = (state) => new_reel(state);
-const event = (values) => c._$n__PCT__$M_(RespoEvent, ...RespoEvent.fields.flatMap((field) => [field, values[field.value] ?? null]));
+// DOM callbacks receive a Map, not the independently exported RespoEvent Struct.
+const event = (values) => map(...Object.entries(values).flatMap(([key, value]) => [t[key], value]));
 function handlers(node, kind, found = []) {
   if (component_$q_(node)) return handlers(c.option_$o_unwrap(component_tree(node)), kind, found);
   const events = c.get(node, t.event);
@@ -40,7 +40,7 @@ test("input branch preserves none, typed InputData and legacy Map states", () =>
   }
   assert.throws(() => read_input_branch(map(t.cursor, c._$L_(t.input), t.data, map(t.content, 42))));
 });
-test("actual RespoEvent input callback emits one nominal states Enum and re-renders", () => {
+test("actual Map input callback emits one nominal states Enum and re-renders", () => {
   const callbacks = handlers(app.comp_container(root(store)), t.input);
   assert.equal(callbacks.length, 1);
   const operations = [];
