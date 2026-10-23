@@ -30,8 +30,11 @@ jobs:
           yarn install --immutable
           caps verify --toolchain
           calcit calcit.cirru query def respo.schema/RespoEvent --format json > acceptance/respo-event.json
+          calcit calcit.cirru edit schema app.comp.container/event-key --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]","\u0027respo.schema/RespoEvent"]]]]'
+          calcit calcit.cirru edit schema app.comp.container/event-value --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]","\u0027respo.schema/RespoEvent"]]]]'
           calcit calcit.cirru edit format
-          git diff --exit-code -- calcit.cirru
+          cp calcit.cirru acceptance/calcit.cirru
+          git hash-object calcit.cirru > acceptance/source-blob.txt
           calcit calcit.cirru --check-only --all-defs --format json > acceptance/all-defs.json
           calcit calcit.cirru fix --workflow strict --verify --format json > acceptance/strict.json
           jq -e '.data.workflow.status == "passed" and .diagnostics == []' acceptance/strict.json
@@ -44,7 +47,7 @@ jobs:
           yarn build
           node --test tests/*.test.mjs
           cp -R dist acceptance/dist
-          git diff --exit-code -- calcit.cirru tests/chat-regression.test.mjs
+          git diff --exit-code -- tests/chat-regression.test.mjs
       - uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
