@@ -32,6 +32,8 @@ jobs:
           calcit calcit.cirru query def respo.schema/RespoEvent --format json > acceptance/respo-event.json
           calcit calcit.cirru edit schema app.comp.container/event-key --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]","\u0027respo.schema/RespoEvent"]]]]'
           calcit calcit.cirru edit schema app.comp.container/event-value --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]","\u0027respo.schema/RespoEvent"]]]]'
+          calcit calcit.cirru tree replace app.comp.container/event-key --path 3.1 --input-format json-ast --code '[":key","event"]'
+          calcit calcit.cirru tree replace app.comp.container/event-value --path 3.1 --input-format json-ast --code '[":value","event"]'
           calcit calcit.cirru edit format
           cp calcit.cirru acceptance/calcit.cirru
           git hash-object calcit.cirru > acceptance/source-blob.txt
