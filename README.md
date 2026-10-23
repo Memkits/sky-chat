@@ -14,8 +14,7 @@ _TODO_
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
-Use the published Calcit/procs **0.30.1-alpha.4** pair (a prerelease, not
-stable 0.30.1) with `caps --ci --strict`,
+Use the formal Calcit/procs **0.30.1** pair with `caps --ci --strict`,
 `yarn install --immutable` and `caps verify --toolchain`. Only `calcit.cirru`
 and `deps.cirru` are canonical; CI rejects retired `compact.cirru` and
 `package.cirru`. The unused Markdown module was removed; message rendering,
@@ -29,7 +28,12 @@ input/send/clear flows, whole-store updates, DOM adapters and persistence.
 The original storage key is `workflow`, not the repository name. Startup does
 not restore storage; this existing behavior is unchanged.
 
-正式模块使用精确 tag：Reel 0.6.39、Respo 0.16.122、UI 0.7.41、JS-FFI 0.2.3。
+正式模块使用精确 tag：Reel 0.6.41、Respo 0.16.124、UI 0.8.0、JS-FFI 0.2.5。
+升级后重新安装依赖、重启开发服务并刷新页面，不混用旧 runtime。
+本轮迁移 3 处旧 Option helper 到 `.unwrap-or`，不改变默认值与字符算法；
+全部 schema、两处页面 `hud!` 和原 9 项业务测试保留。
+CI 明确要求完整 strict 状态 passed 且诊断为空，不仅检查命令退出码。
+正式 Linux CI 与实际页面验收待完成；不把版本声明更新等同迁移验收通过。
 内部使用真实 `reel.typed/State<Op,Store>` 和名义 Op，不再用 Unit 冒充 Reel Map。
 Store、Message、InputData 仍是真实 Struct，输入分支接受旧 Map 和当前 Struct；
 混合 key 的 UI 状态及事件解码入口保留必要 Dynamic 边界（分析仍有 4 处），不伪装零债务。

@@ -28,8 +28,8 @@
                     let
                         numbers pair
                       +
-                        * 2 $ option:unwrap-or (first numbers) 0
-                        option:unwrap-or (last numbers) 0
+                        * 2 $ .unwrap-or (first numbers) 0
+                        .unwrap-or (last numbers) 0
               div
                 {} $ :style $ {} (:display :inline-block) (:width 18) (:line-height |6px) (:margin-right 4)
                   :box-shadow $ str "|0 0 2px " $ hsl 0 0 80
@@ -251,7 +251,7 @@
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cdn?
-            = |true $ option:unwrap-or (get-env |cdn) |false
+            = |true $ .unwrap-or (get-env |cdn) |false
           :examples $ []
           :schema $ :: 'Bool
         'dev? $ %{} 'CodeEntry (:doc |)
