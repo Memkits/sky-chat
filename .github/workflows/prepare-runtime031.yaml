@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p acceptance
-          test "$(git hash-object calcit.cirru)" = 478ea1f9ef4325e8a3d96f3134fc7f68edf892c0
+          test "$(git hash-object calcit.cirru)" = b9e94a3667e09029fff4da44bdf3aa379d552997
           caps --strict --ci
           yarn install --immutable
           caps verify --toolchain
@@ -33,11 +33,8 @@ jobs:
           calcit calcit.cirru query def respo.schema/EventHandler --format json > acceptance/event-handler.json
           calcit calcit.cirru query def 'respo.util.format/event->edn' --format json > acceptance/event-normalizer.json
           calcit calcit.cirru query def respo.util.format/event-base-edn --format json > acceptance/event-base.json
-          calcit calcit.cirru edit schema app.comp.container/event-key --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]",["::","\u0027Map","\u0027Tag","\u0027Dynamic"]]]]]'
-          calcit calcit.cirru edit schema app.comp.container/event-value --input-format json-ast --code '["::","\u0027Fn",["{}",[":return","\u0027String"],[":args",["[]",["::","\u0027Map","\u0027Tag","\u0027Dynamic"]]]]]'
-          calcit calcit.cirru tree wrap app.comp.container/comp-input --path 3.2.2.1.4.1.2.1.3.2.1 --input-format json-ast --code '["decode-map-as","self",["::","\u0027Map","\u0027Tag","\u0027Dynamic"]]'
-          calcit calcit.cirru tree wrap app.comp.container/comp-input --path 3.2.2.1.6.1.2.1.1.2.1 --input-format json-ast --code '["decode-map-as","self",["::","\u0027Map","\u0027Tag","\u0027Dynamic"]]'
           calcit calcit.cirru edit format
+          git diff --exit-code -- calcit.cirru
           cp calcit.cirru acceptance/calcit.cirru
           git hash-object calcit.cirru > acceptance/source-blob.txt
           calcit calcit.cirru --check-only --all-defs --format json > acceptance/all-defs.json
