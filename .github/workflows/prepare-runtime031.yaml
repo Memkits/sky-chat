@@ -34,7 +34,7 @@ jobs:
           calcit calcit.cirru --check-only --all-defs --format json > acceptance/all-defs.json
           calcit calcit.cirru fix --workflow strict --verify --format json > acceptance/strict.json
           jq -e '.data.workflow.status == "passed" and .diagnostics == []' acceptance/strict.json
-          calcit calcit.cirru analyze quality --format json > acceptance/quality.json
+          calcit calcit.cirru analyze weak-types --only coverage --format json > acceptance/coverage.json
       - name: Build original application and run original tests
         env:
           VITE_BASE_URL: ./
