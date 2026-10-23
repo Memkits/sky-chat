@@ -36,7 +36,9 @@ not restore storage; this existing behavior is unchanged.
 原 9 项业务测试和断言保留，只把错误的 RespoEvent Struct 夹具改成真实 Map 形状，
 不将单独导出的 Struct 当作 DOM 回调载荷，详见 [Respo #275](https://github.com/Respo/respo.calcit/issues/275)。
 CI 明确要求完整 strict 状态 passed 且诊断为空，不仅检查命令退出码。
-正式 Linux CI 与实际页面验收待完成；不把版本声明更新等同迁移验收通过。
+正式 Linux 隔离验收 39962521809 已通过 222 个定义检查、完整 strict 和原 9 项测试。
+同源实际页面已验收 DOM 输入、按钮发送清空、字符呈现及刷新后原启动行为；
+Enter 仍留下默认换行，见下方既有 #11，不把 Node 回调测试当作默认行为证明。
 内部使用真实 `reel.typed/State<Op,Store>` 和名义 Op，不再用 Unit 冒充 Reel Map。
 Store、Message、InputData 仍是真实 Struct，输入分支接受旧 Map 和当前 Struct；
 混合 key 的 UI 状态及异构事件 Map 值保留必要 Dynamic 边界，不伪装零债务。
