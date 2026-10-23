@@ -31,7 +31,7 @@ jobs:
           caps verify --toolchain
           calcit calcit.cirru query def respo.schema/RespoEvent --format json > acceptance/respo-event.json
           calcit calcit.cirru query def respo.schema/EventHandler --format json > acceptance/event-handler.json
-          calcit calcit.cirru query def respo.util.format/event->edn --format json > acceptance/event-normalizer.json
+          calcit calcit.cirru query def 'respo.util.format/event->edn' --format json > acceptance/event-normalizer.json
           calcit calcit.cirru edit format
           cp calcit.cirru acceptance/calcit.cirru
           git hash-object calcit.cirru > acceptance/source-blob.txt
