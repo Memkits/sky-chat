@@ -31,13 +31,13 @@
                         * 2 $ .unwrap-or (first numbers) 0
                         .unwrap-or (last numbers) 0
               div
-                {} $ :style $ {} (:display :inline-block) (:width 18) (:line-height |6px) (:margin-right 4)
+                {} $ :style $ {} (:display |inline-block) (:width |18px) (:line-height |6px) (:margin-right |4px)
                   :box-shadow $ str "|0 0 2px " $ hsl 0 0 80
                 , & $ -> points $ map
                   fn (point)
                     div $ {}
                       :class-name $ str "|cell cell-" point
-                      :style $ {} (:width 6) (:height 6) (:display :inline-block)
+                      :style $ {} (:width |6px) (:height |6px) (:display |inline-block)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Number
@@ -47,7 +47,7 @@
                 store $ reel :store
                 states store.:states
               div
-                {} $ :style $ merge ui/global ui/fullscreen ui/column
+                {} $ :style $ .merge ui/global ui/fullscreen ui/column
                 comp-header
                 comp-messages store.:messages
                 comp-input $ app.schema/read-input-branch $ >> states :input
@@ -58,8 +58,8 @@
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
-              {} $ :style $ merge ui/row-parted
-                {} (:padding "|4px 6px") (:font-weight :bold) (:font-size 16)
+              {} $ :style $ .merge ui/row-parted
+                {} (:padding "|4px 6px") (:font-weight |bold) (:font-size |16px)
                   :background-color $ hsl 0 0 97
                   :border-bottom $ str "|1px solid " $ hsl 0 0 90
               span $ {}
@@ -79,12 +79,12 @@
                   (:none) (app.schema/InputData :content |)
                 content state.:content
               div
-                {} $ :style $ merge ui/row-middle
+                {} $ :style $ .merge ui/row-middle
                   {} (:padding "|6px 4px")
                     :background-color $ hsl 0 0 97
                     :border-top $ str "|1px solid " $ hsl 0 0 90
                 textarea $ {} (:value content) (:placeholder |Message...)
-                  :style $ merge ui/textarea ui/expand $ {} (:height 40) (:line-height |24px) (:border :none)
+                  :style $ .merge ui/textarea ui/expand $ {} (:height |40px) (:line-height |24px) (:border |none)
                   :on-input $ fn (event dispatch!)
                     dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content
                       event-value $ decode-map-as event $ :: 'Map 'Tag 'Dynamic
@@ -101,10 +101,10 @@
                 div $ {}
                   :style $ {}
                     :border $ str "|2px solid " $ hsl 200 80 60
-                    :width 28
-                    :height 28
+                    :width |28px
+                    :height |28px
                     :border-radius |50%
-                    :cursor :pointer
+                    :cursor |pointer
                   :on-click $ fn (event dispatch!)
                     when
                       not $ blank? content
@@ -123,11 +123,11 @@
                 content message.:message
                 name message.:token
               div
-                {} $ :style $ merge ui/row
+                {} $ :style $ .merge ui/row
                   {} (:width |90%) (:padding "|4px 6px")
                 div ({})
                   div $ {}
-                    :style $ {} (:width 40) (:height 40)
+                    :style $ {} (:width |40px) (:height |40px)
                       :background-color $ generate-color name
                       :border-radius |4px
                     :on-click $ fn (event dispatch!)
@@ -138,7 +138,7 @@
                   div
                     {} $ :style $ {}
                       :color $ hsl 0 0 70
-                      :font-size 10
+                      :font-size |10px
                       :line-height |16px
                     <> name
                   comp-sentence content
@@ -160,7 +160,7 @@
         'comp-sentence $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-sentence (text)
             list->
-              {} $ :style $ {} (:width |100%) (:word-break :break-all) (:line-height |16px)
+              {} $ :style $ {} (:width |100%) (:word-break |break-all) (:line-height |16px)
               -> (split text |)
                 map-indexed $ fn (idx char)
                   [] idx $ comp-char $ get-char-code char
@@ -193,7 +193,7 @@
         'pad9 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pad9 (acc)
             if
-              < (count acc) 18
+              < (.len acc) 18
               recur $ concat ([] 0) acc
               , acc
           :examples $ []
