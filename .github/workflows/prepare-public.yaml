@@ -1,0 +1,66 @@
+name: Prepare reviewed public source
+on:
+  push:
+    branches: [prepare/sky-chat-public031]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: |
+          corepack enable
+          corepack prepare yarn@4.18.0 --activate
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          caps-version: "0.1.1"
+          deps-file: deps.cirru
+      - name: Resolve exact formal graph
+        run: |
+          set -euo pipefail
+          test "$(calcit -v)" = 0.30.1
+          caps --strict --ci
+          yarn install --immutable
+          caps verify --toolchain
+          git diff --quiet -- deps.cirru package.json yarn.lock .yarnrc.yml
+      - name: Original complete gates before edits
+        run: |
+          set -euo pipefail
+          mkdir -p acceptance
+          calcit --check-only --all-defs
+          calcit --check-only --ns app.comp.container --ns app.config --ns app.main --ns app.schema --ns app.updater --summary-only --format json
+          calcit fix --workflow strict --verify --format json | tee acceptance/strict-before.json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit analyze weak-types --only deprecated-call --summary-only --format json | jq -e '.data.summary.calls == 0'
+          VITE_BASE_URL=./ yarn build
+          node --test tests/*.test.mjs | tee acceptance/tests-before.log
+      - name: Official guarded source transaction
+        run: node apply-reviewed.mjs
+      - name: Complete original gates after edits
+        run: |
+          set -euo pipefail
+          calcit edit format
+          test "$(git hash-object calcit.cirru)" = "$(cat acceptance/snapshot-after-blob.txt)"
+          calcit --check-only --all-defs
+          calcit --check-only --ns app.comp.container --ns app.config --ns app.main --ns app.schema --ns app.updater --summary-only --format json
+          calcit fix --workflow strict --verify --format json | tee acceptance/strict.json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit analyze weak-types --only deprecated-call --summary-only --format json | jq -e '.data.summary.calls == 0'
+          VITE_BASE_URL=./ yarn build
+          node --test tests/*.test.mjs | tee acceptance/tests.log
+          git diff --quiet -- tests
+          cp calcit.cirru acceptance/snapshot.cirru
+          cp -R dist acceptance/dist
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: sky-chat-source-evidence
+          path: acceptance
+          if-no-files-found: error
+          retention-days: 30
