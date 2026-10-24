@@ -6,6 +6,18 @@ Sky Chat
 
 Demo http://r.tiye.me/Memkits/sky-chat/ .
 
+### 本轮使用者影响
+
+继续配对正式 Calcit / procs 0.30.1；升级精确正式依赖后重新安装、重启开发服务并完整刷新。
+聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
+UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
+本轮不授权合并、生产部署或发版。
+
+五处 Map merge 改用 `.merge`，pad9 的 List count 改为 `.len`，
+十七处静态 CSS 叶子改为等价 String，减少样式异构值。
+原九项测试和断言、真实事件 Map 解码及所有 schema 保持；不新增强转、质量预算、
+防御测试框架、重复 COS 校验或 concurrently。既有开放状态与 FFI 边界不伪装零债务。
+
 ### Usages
 
 _TODO_
@@ -28,9 +40,9 @@ input/send/clear flows, whole-store updates, DOM adapters and persistence.
 The original storage key is `workflow`, not the repository name. Startup does
 not restore storage; this existing behavior is unchanged.
 
-正式模块使用精确 tag：Reel 0.6.41、Respo 0.16.124、UI 0.8.0、JS-FFI 0.2.5。
+正式模块使用精确 tag：Reel 0.6.42、Respo 0.16.126、UI 0.8.1、JS-FFI 0.2.6。
 升级后重新安装依赖、重启开发服务并刷新页面，不混用旧 runtime。
-本轮迁移 3 处旧 Option helper 到 `.unwrap-or`，不改变默认值与字符算法；
+此前迁移 3 处旧 Option helper 到 `.unwrap-or`，不改变默认值与字符算法；
 除两个内部事件适配器收紧为真实 `Map<Tag,Dynamic>` 参数外，其他 schema 不变；
 两个回调入口先受检解码 Map，再读取 String 载荷。两处页面 `hud!` 保留。
 原 9 项业务测试和断言保留，只把错误的 RespoEvent Struct 夹具改成真实 Map 形状，
