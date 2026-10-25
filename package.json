@@ -5,7 +5,7 @@
     "string-to-color": "^2.2.2"
   },
   "devDependencies": {
-    "vite": "8.3.1"
+    "vite": "8.3.3"
   },
   "version": "0.0.4",
   "packageManager": "yarn@4.18.0",
