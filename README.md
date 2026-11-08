@@ -8,15 +8,17 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-继续配对正式 Calcit / procs 0.30.1；升级精确正式依赖后重新安装、重启开发服务并完整刷新。
+配对使用正式 Calcit / procs 0.37.0。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 本轮不授权合并、生产部署或发版。
 
-五处 Map merge 改用 `.merge`，pad9 的 List count 改为 `.len`，
+此前五处 Map merge 改用 `.merge`，pad9 的 List count 改为 `.len`，
 十七处静态 CSS 叶子改为等价 String，减少样式异构值。
-原九项测试和断言、真实事件 Map 解码及所有 schema 保持；不新增强转、质量预算、
+原九项测试和断言保留，合成事件现在使用 Respo 的实际事件适配器；不新增强转、质量预算、
 防御测试框架、重复 COS 校验或 concurrently。既有开放状态与 FFI 边界不伪装零债务。
+
+输入和键盘事件使用 `RespoEvent`，状态路径使用 `CoordKey`，内部操作分发使用 `Op | Reel.Control`。旧调试事件仍可解码。
 
 ### Usages
 
