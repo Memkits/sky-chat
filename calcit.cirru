@@ -6,18 +6,16 @@
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op |app.schema/Op
+      :type-slots $ {} $ :dispatch-op 'app.schema/Op
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'ScrollHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait ScrollHost
-            .!scrollIntoViewIfNeeded $ :: 'Fn $ {}
-              :args $ [] 'app.comp.container/ScrollHost
-              :return 'Unit
+            .!scrollIntoViewIfNeeded $ Fn app.comp.container/ScrollHost $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'comp-char $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-char (code)
             let
@@ -39,8 +37,7 @@
                       :class-name $ str "|cell cell-" point
                       :style $ {} (:width |6px) (:height |6px) (:display |inline-block)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Number
+          :schema $ quote $ Fn Number (-> respo.schema/Component)
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
@@ -51,10 +48,11 @@
                 comp-header
                 comp-messages store.:messages
                 comp-input $ app.schema/read-input-branch $ >> states :input
-                when dev? $ comp-reel (>> states :reel) (reel-view/view-data reel) ({})
+                if dev?
+                  Option :some $ comp-reel (>> states :reel) (reel-view/view-data reel) ({})
+                  Option :none
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'reel.typed/State 'app.schema/Op 'app.schema/Store
+          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store) (-> respo.schema/Component)
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
@@ -68,8 +66,7 @@
                 <> "|Sky Chat" $ {} $ :font-family ui/font-fancy
               span $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
+          :schema $ quote $ Fn (-> respo.schema/Component)
         'comp-input $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-input (states)
             let
@@ -86,18 +83,25 @@
                 textarea $ {} (:value content) (:placeholder |Message...)
                   :style $ .merge ui/textarea ui/expand $ {} (:height |40px) (:line-height |24px) (:border |none)
                   :on-input $ fn (event dispatch!)
-                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content
-                      event-value $ decode-map-as event $ :: 'Map 'Tag 'Dynamic
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
+                    dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content (event-value event)
+                    , &unit
                   :autofocus true
                   :on-keydown $ fn (event dispatch!)
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
                     when
                       and
-                        = |Enter $ event-key $ decode-map-as event (:: 'Map 'Tag 'Dynamic)
+                        = |Enter $ event-key event
                         not $ blank? content
                       dispatch! $ app.schema/Op :message content
                       dispatch! $ app.schema/Op :states cursor $ app.schema/InputData :content |
                       scroll-view!
-                =< 6 0
+                    , &unit
+                space-x 6
                 div $ {}
                   :style $ {}
                     :border $ str "|2px solid " $ hsl 200 80 60
@@ -106,6 +110,9 @@
                     :border-radius |50%
                     :cursor |pointer
                   :on-click $ fn (event dispatch!)
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
                     when
                       not $ blank? content
                       dispatch! $ app.schema/Op :message content
@@ -114,9 +121,9 @@
                         (:some element) (element-focus! element)
                         (:none) &unit
                       scroll-view!
+                    , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'app.schema/InputBranch
+          :schema $ quote $ Fn app.schema/InputBranch (-> respo.schema/Component)
         'comp-message $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-message (message)
             let
@@ -132,7 +139,7 @@
                       :border-radius |4px
                     :on-click $ fn (event dispatch!)
                       dispatch! $ app.schema/Op :rename $ str (random)
-                =< 8 0
+                space-x 8
                 div
                   {} $ :style ui/expand
                   div
@@ -143,8 +150,7 @@
                     <> name
                   comp-sentence content
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'app.schema/Message
+          :schema $ quote $ Fn app.schema/Message (-> respo.schema/Component)
         'comp-messages $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-messages (messages)
             div
@@ -153,10 +159,9 @@
                 {} $ :id |message-area
                 map-indexed messages $ fn (idx message)
                   [] idx $ comp-message message
-              =< 0 80
+              space-x 0
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'List 'app.schema/Message
+          :schema $ quote $ Fn (List app.schema/Message) (-> respo.schema/Component)
         'comp-sentence $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-sentence (text)
             list->
@@ -165,31 +170,22 @@
                 map-indexed $ fn (idx char)
                   [] idx $ comp-char $ get-char-code char
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> respo.schema/Component)
         'event-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event-key (event)
-            decode-map-as
-              .unwrap $ get event :key
-              , 'String
+            decode-map-as (:key event) 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn respo.schema/RespoEvent (-> String)
         'event-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event-value (event)
-            decode-map-as
-              .unwrap $ get event :value
-              , 'String
+            decode-map-as (:value event) 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn respo.schema/RespoEvent (-> String)
         'generate-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn generate-color (name)
             decode-map-as (gen-color name) 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
         'pad9 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pad9 (acc)
             if
@@ -197,18 +193,15 @@
               recur $ concat ([] 0) acc
               , acc
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'Number
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (List Number)
+            -> $ List Number
         'request-fullscreen! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn request-fullscreen! ()
             match (query-selector |body)
               (:some body) (element-request-fullscreen! body)
               (:none) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'scroll-last! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn scroll-last! ()
             match (query-selector "|#message-area > :last-child")
@@ -217,15 +210,11 @@
               (:none) (println "|no message target")
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'scroll-view! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn scroll-view! () (set-timeout! scroll-last! 100) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'turn-codes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn turn-codes (acc code)
             if (= 0 code) (pad9 acc)
@@ -233,14 +222,13 @@
                 conj acc $ &number:rem code 2
                 floor $ * 0.5 code
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Number) 'Number
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (List Number) Number
+            -> $ List Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require (respo-ui.core :as ui)
             respo.core :refer $ defcomp <> >> div textarea span list->
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             reel.comp.reel :refer $ comp-reel
             app.config :refer $ dev?
             respo.util.format :refer $ hsl
@@ -254,16 +242,16 @@
           :code $ quote $ def cdn?
             = |true $ .unwrap-or (get-env |cdn) |false
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev? true
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:cdn-url |http://cdn.tiye.me/calcit-workflow/) (:title |Calcit) (:icon |http://cdn.tiye.me/logo/mvc-works.png) (:storage-key |workflow)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.main $ %{} 'FileEntry
@@ -271,21 +259,29 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel app.schema/store)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'reel.typed/State 'app.schema/Op 'app.schema/Store
+          :schema $ quote $ Ref (reel.typed/State app.schema/Op app.schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            if (enum? op)
-              reset! *reel $ match (typed/decode-control op)
-                (:some control) (typed/apply-control updater @*reel control)
+            if
+              = (enum-definition op) (Option :some typed/Control)
+              dispatch-resolved! $ decode-map-as op 'reel.typed/Control
+              match (typed/decode-control op)
+                (:some control) (dispatch-resolved! control)
                 (:none)
-                  typed/record-op updater @*reel (app.schema/decode-op op) (generate-id!) (shared/now-ms)
-              raise "|Expected Enum operation"
+                  dispatch-resolved! $ app.schema/decode-op op
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn AnyEnum (-> Unit)
+        'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-resolved! (op)
+            reset! *reel $ match op
+              (reel.typed/Control control) (typed/apply-control updater @*reel control)
+              (app.schema/Op action)
+                typed/record-op updater @*reel action (generate-id!) (shared/now-ms)
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn app.schema/ResolvedOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (load-console-formatter!)
             println "|Running mode:" $ if config/dev? |dev |release
@@ -302,14 +298,12 @@
               , 1000
             println "|App started."
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
             narrow-element $ .unwrap $ query-selector |.app
           :examples $ []
-          :schema $ :: 'respo.dom/DomElement
+          :schema $ quote respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             storage-set!
@@ -317,9 +311,7 @@
               format-cirru-edn $ &struct:to-map $ @*reel :store
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -330,29 +322,26 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel) dispatch!
+            render! mount-target (comp-container @*reel)
+              fn (op)
+                hint-fn $ Fn app.schema/Op $ -> Unit
+                dispatch! op
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration callback)
             set-interval! callback $ * 1000 duration
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] 'Number $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ []
+          :schema $ quote $ Fn Number
+            Fn $ -> Unit
+            -> Number
         'snippets $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn snippets () (println config/cdn?)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -372,39 +361,43 @@
       :defs $ {}
         'InputBranch $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct InputBranch
-            :cursor $ :: 'List 'Dynamic
-            :data $ :: 'Option 'app.schema/InputData
+            :cursor $ List respo.schema/CoordKey
+            :data $ Option app.schema/InputData
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'InputData $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct InputData (:content 'String)
+          :code $ quote $ defstruct InputData (:content String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Message $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Message (:token 'String) (:message 'String)
+          :code $ quote $ defstruct Message (:token String) (:message String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (:: 'List 'Dynamic) 'Dynamic
-            :hydrate-storage 'app.schema/Store
-            :message 'String
-            :rename 'String
+            :states (List respo.schema/CoordKey) Dynamic
+            :hydrate-storage app.schema/Store
+            :message String
+            :rename String
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
+        'ResolvedOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResolvedOp Op reel.typed/Control
+          :examples $ []
+          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ :: 'Map 'Dynamic 'Dynamic
-            :token 'String
-            :messages $ :: 'List 'app.schema/Message
+            :states $ Map Dynamic Dynamic
+            :token String
+            :messages $ List app.schema/Message
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'decode-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-op (message)
             match message
               (:states cursor value)
                 Op :states
-                  decode-map-as cursor $ :: 'List 'Dynamic
+                  decode-map-as cursor $ List respo.schema/CoordKey
                   , value
               (:hydrate-storage data)
                 Op :hydrate-storage $ decode-map-as
@@ -415,14 +408,13 @@
               (:rename name)
                 Op :rename $ decode-map-as name 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/Op)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn AnyEnum (-> app.schema/Op)
         'read-input-branch $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-input-branch (states)
             InputBranch :cursor
               decode-map-as
                 .unwrap $ get states :cursor
-                :: 'List 'Dynamic
+                List respo.schema/CoordKey
               , :data $ match (get states :data)
                 (:none) (Option :none)
                 (:some data)
@@ -430,15 +422,14 @@
                     if (struct? data) (&struct:to-map data) data
                     , 'app.schema/InputData
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/InputBranch)
-            :args $ [] $ :: 'Map 'Dynamic 'Dynamic
+          :schema $ quote $ Fn (Map Dynamic Dynamic) (-> app.schema/InputBranch)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
               {} $ :cursor $ []
               , :token |TODO :messages $ []
           :examples $ []
-          :schema $ :: 'app.schema/Store
+          :schema $ quote app.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
@@ -449,15 +440,14 @@
               (:states cursor data)
                 assoc store :states $ decode-map-as
                   assoc-in (store :states) (conj cursor :data) data
-                  :: 'Map 'Dynamic 'Dynamic
+                  Map Dynamic Dynamic
               (:hydrate-storage data) data
               (:message message)
                 assoc store :messages $ conj (store :messages)
                   app.schema/Message :token (store :token) :message message
               (:rename token) (assoc store :token token)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/Store)
-            :args $ [] 'app.schema/Store 'app.schema/Op 'String 'Number
+          :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ app.schema :as app.schema
