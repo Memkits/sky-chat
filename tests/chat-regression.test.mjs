@@ -14,7 +14,7 @@ const map = c._$n__$M_;
 const read = (value, key) => c.option_$o_unwrap(c.get(value, t[key]));
 const op = (key, ...args) => c._PCT__$o__$o_(Op, t[key], ...args);
 const inputData = (content) => c._$n__PCT__$M_(InputData, t.content, content);
-const root = (state) => new_reel(state);
+const renderChat = (state) => app.comp_container(new_reel(state), () => {});
 const event = ({ type, key, value }) => event__GT_edn({
   type: type === t.keydown ? "keydown" : "input",
   key,
@@ -32,7 +32,7 @@ function handlers(node, kind, found = []) {
   return found;
 }
 test("actual initial typed Store renders the chat and empty input", () => {
-  const html = make_string(app.comp_container(root(store)));
+  const html = make_string(renderChat(store));
   assert.ok(html.includes("Sky Chat"));
   assert.ok(html.includes("Message..."));
 });
@@ -45,7 +45,7 @@ test("input branch preserves none, typed InputData and legacy Map states", () =>
   assert.throws(() => read_input_branch(map(t.cursor, c._$L_(t.input), t.data, map(t.content, 42))));
 });
 test("actual Respo input callback emits one nominal states Enum and re-renders", () => {
-  const callbacks = handlers(app.comp_container(root(store)), t.input);
+  const callbacks = handlers(renderChat(store), t.input);
   assert.equal(callbacks.length, 1);
   const operations = [];
   callbacks[0](event({ type: t.input, value: "Typed input" }), (...args) => { assert.equal(args.length, 1); operations.push(args[0]); });
@@ -54,11 +54,11 @@ test("actual Respo input callback emits one nominal states Enum and re-renders",
   assert.ok(c.struct_$q_(next));
   assert.equal(read(next, "token"), read(store, "token"));
   assert.equal(read(read(read(read(next, "states"), "input"), "data"), "content"), "Typed input");
-  assert.ok(make_string(app.comp_container(root(next))).includes("Typed input"));
+  assert.ok(make_string(renderChat(next)).includes("Typed input"));
 });
 test("real Enter callback sends a typed message, clears input and schedules scrolling", () => {
   const before = updater(store, op("states", c._$L_(t.input), inputData("你好 fixture")), "fixture", 0);
-  const callbacks = handlers(app.comp_container(root(before)), t.keydown);
+  const callbacks = handlers(renderChat(before), t.keydown);
   assert.equal(callbacks.length, 1);
   const previous = globalThis.window;
   const previousTimer = globalThis.setTimeout;
@@ -75,7 +75,7 @@ test("real Enter callback sends a typed message, clears input and schedules scro
     assert.equal(read(message, "message"), "你好 fixture");
     assert.equal(read(message, "token"), read(store, "token"));
     assert.equal(read(read(read(read(sent, "states"), "input"), "data"), "content"), "");
-    assert.ok(make_string(app.comp_container(root(sent))).includes("Sky Chat"));
+    assert.ok(make_string(renderChat(sent)).includes("Sky Chat"));
     assert.deepEqual(delays, [100]);
   } finally {
     globalThis.setTimeout = previousTimer;
@@ -84,7 +84,7 @@ test("real Enter callback sends a typed message, clears input and schedules scro
 });
 test("actual send click focuses the textarea and retains single Enum operations", () => {
   const before = updater(store, op("states", c._$L_(t.input), inputData("Click message")), "fixture", 0);
-  const callbacks = handlers(app.comp_container(root(before)), t.click);
+  const callbacks = handlers(renderChat(before), t.click);
   assert.equal(callbacks.length, 2);
   const doc = globalThis.document;
   const timer = globalThis.setTimeout;
@@ -123,7 +123,7 @@ test("actual fullscreen and scroll adapters call declared host methods", () => {
 test("blank Enter and non-Enter keys do not dispatch messages", () => {
   for (const [content, key] of [["", "Enter"], ["text", "Escape"]]) {
     const state = updater(store, op("states", c._$L_(t.input), inputData(content)), "fixture", 0);
-    const callback = handlers(app.comp_container(root(state)), t.keydown)[0];
+    const callback = handlers(renderChat(state), t.keydown)[0];
     callback(event({ type: t.keydown, key }), () => assert.fail("Unexpected dispatch"));
   }
 });
