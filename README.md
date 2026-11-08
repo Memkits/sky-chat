@@ -8,7 +8,7 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.37.0。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.38.0。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 本轮不授权合并、生产部署或发版。
@@ -18,7 +18,7 @@ UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复�
 原九项测试和断言保留，合成事件现在使用 Respo 的实际事件适配器；不新增强转、质量预算、
 防御测试框架、重复 COS 校验或 concurrently。既有开放状态与 FFI 边界不伪装零债务。
 
-输入和键盘事件使用 `RespoEvent`，状态路径使用 `CoordKey`，内部操作分发使用 `Op | Reel.Control`。旧调试事件仍可解码。
+输入和键盘事件使用 `RespoEvent`，状态路径使用 `CoordKey`。正式 Reel 0.11.0 的面板和键盘通过具名 `Control` 回调，内部与应用 `Op` 组成 union。旧匿名调试事件随 Reel 0.11.0 退役。
 
 ### Usages
 
@@ -77,7 +77,7 @@ COS uploads frontend `dist` resources only.
 PR previews use `pr/<number>/<run-id>/<attempt>/` to isolate uploads; the
 production prefix is unchanged. The COS action's built-in verification replaces
 the standalone CDN build test; all chat and persistence business tests remain.
-The formal COS action v1.2.0 also checks HTML asset references internally;
+The formal COS action v1.3.0 also checks HTML asset references internally;
 no separate reference checker or repeated public verification is needed.
 
 ### License

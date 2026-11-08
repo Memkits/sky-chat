@@ -39,7 +39,7 @@
           :examples $ []
           :schema $ quote $ Fn Number (-> respo.schema/Component)
         'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control!)
             let
                 store $ reel :store
                 states store.:states
@@ -49,10 +49,12 @@
                 comp-messages store.:messages
                 comp-input $ app.schema/read-input-branch $ >> states :input
                 if dev?
-                  Option :some $ comp-reel (>> states :reel) (reel-view/view-data reel) ({})
+                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control!
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
@@ -229,13 +231,12 @@
           :require (respo-ui.core :as ui)
             respo.core :refer $ defcomp <> >> div textarea span list->
             respo.comp.space :refer $ space-x
-            reel.comp.reel :refer $ comp-reel
+            reel.comp.reel :refer $ comp-typed-reel
             app.config :refer $ dev?
             respo.util.format :refer $ hsl
             |string-to-color :default gen-color
             app.schema :as app.schema
             js-ffi.browser :refer $ element-focus! query-selector random set-timeout! element-request-fullscreen!
-            reel.typed-compat :as reel-view
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
@@ -263,16 +264,9 @@
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            if
-              = (enum-definition op) (Option :some typed/Control)
-              dispatch-resolved! $ decode-map-as op 'reel.typed/Control
-              match (typed/decode-control op)
-                (:some control) (dispatch-resolved! control)
-                (:none)
-                  dispatch-resolved! $ app.schema/decode-op op
-            , &unit
+            dispatch-resolved! op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit)
+          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :js-ffi)
         'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-resolved! (op)
             reset! *reel $ match op
@@ -287,7 +281,7 @@
             println "|Running mode:" $ if config/dev? |dev |release
             render-app!
             add-watch! *reel :changes $ fn (reel previous) (render-app!)
-            listen-devtools! |a dispatch!
+            listen-devtools! |a on-control!
             set-before-unload! $ fn (event) (persist-storage!)
             repeat! 60 persist-storage!
             set-timeout!
@@ -304,6 +298,10 @@
             narrow-element $ .unwrap $ query-selector |.app
           :examples $ []
           :schema $ quote respo.dom/DomElement
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control) (dispatch-resolved! control)
+          :examples $ []
+          :schema $ quote $ Fn reel.typed/Control (-> Unit) (:features :js-ffi)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             storage-set!
@@ -325,10 +323,9 @@
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel)
-              fn (op)
-                hint-fn $ Fn app.schema/Op $ -> Unit
-                dispatch! op
+            render-with! mount-target
+              fn () $ comp-container @*reel on-control!
+              , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'repeat! $ %{} 'CodeEntry (:doc |)
@@ -345,7 +342,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            respo.core :refer $ render! clear-cache!
+            respo.core :refer $ render-with! clear-cache!
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
             app.schema :as app.schema
@@ -392,23 +389,6 @@
             :messages $ List app.schema/Message
           :examples $ []
           :schema $ quote StructDef
-        'decode-op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn decode-op (message)
-            match message
-              (:states cursor value)
-                Op :states
-                  decode-map-as cursor $ List respo.schema/CoordKey
-                  , value
-              (:hydrate-storage data)
-                Op :hydrate-storage $ decode-map-as
-                  if (struct? data) (&struct:to-map data) data
-                  , 'app.schema/Store
-              (:message text)
-                Op :message $ decode-map-as text 'String
-              (:rename name)
-                Op :rename $ decode-map-as name 'String
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> app.schema/Op)
         'read-input-branch $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-input-branch (states)
             InputBranch :cursor
