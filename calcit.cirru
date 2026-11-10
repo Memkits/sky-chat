@@ -157,20 +157,22 @@
           :code $ quote $ defcomp comp-messages (messages)
             div
               {} $ :style ui/expand
-              list->
+              keyed->
                 {} $ :id |message-area
                 map-indexed messages $ fn (idx message)
-                  [] idx $ comp-message message
+                  hint-fn $ Fn Number app.schema/Message $ -> respo.schema/ChildPair
+                  keyed-component idx $ comp-message message
               space-x 0
           :examples $ []
           :schema $ quote $ Fn (List app.schema/Message) (-> respo.schema/Component)
         'comp-sentence $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-sentence (text)
-            list->
+            keyed->
               {} $ :style $ {} (:width |100%) (:word-break |break-all) (:line-height |16px)
-              -> (split text |)
-                map-indexed $ fn (idx char)
-                  [] idx $ comp-char $ get-char-code char
+              map-indexed (split text |)
+                fn (idx char)
+                  hint-fn $ Fn Number String $ -> respo.schema/ChildPair
+                  keyed-component idx $ comp-char $ get-char-code char
           :examples $ []
           :schema $ quote $ Fn String (-> respo.schema/Component)
         'event-key $ %{} 'CodeEntry (:doc |)
@@ -229,7 +231,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require (respo-ui.core :as ui)
-            respo.core :refer $ defcomp <> >> div textarea span list->
+            respo.core :refer $ defcomp <> >> div textarea span keyed-> keyed-component
             respo.comp.space :refer $ space-x
             reel.comp.reel :refer $ comp-typed-reel
             app.config :refer $ dev?
