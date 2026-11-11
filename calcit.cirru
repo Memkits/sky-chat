@@ -49,8 +49,8 @@
                 comp-messages store.:messages
                 comp-input $ app.schema/read-input-branch $ >> states :input
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control!
-                  Option :none
+                  Some $ comp-typed-reel (>> states :reel) reel ({}) on-control!
+                  , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
             Fn reel.typed/Control $ -> Unit
@@ -262,7 +262,7 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel app.schema/store)
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State app.schema/Op app.schema/Store)
+          :schema $ quote $ Ref (typed/State app.schema/Op app.schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
@@ -303,7 +303,7 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch-resolved! control)
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             storage-set!
@@ -374,7 +374,7 @@
           :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (List respo.schema/CoordKey) Dynamic
+            :states (List respo.schema/CoordKey) app.schema/InputData
             :hydrate-storage app.schema/Store
             :message String
             :rename String
@@ -398,20 +398,20 @@
                 .unwrap $ get states :cursor
                 List respo.schema/CoordKey
               , :data $ match (get states :data)
-                (:none) (Option :none)
+                (:none) None
                 (:some data)
-                  Option :some $ decode-map-as
+                  Some $ decode-map-as
                     if (struct? data) (&struct:to-map data) data
                     , 'app.schema/InputData
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (-> app.schema/InputBranch)
+          :schema $ quote $ Fn (Map Dynamic V) (-> InputBranch) (:generics V)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
               {} $ :cursor $ []
               , :token |TODO :messages $ []
           :examples $ []
-          :schema $ quote app.schema/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
