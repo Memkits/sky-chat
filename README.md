@@ -8,7 +8,7 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.40.0。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.41.0。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 本轮不授权合并、生产部署或发版。
