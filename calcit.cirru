@@ -55,6 +55,7 @@
           :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :io
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
@@ -125,7 +126,7 @@
                       scroll-view!
                     , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/InputBranch (-> respo.schema/Component)
+          :schema $ quote $ Fn app.schema/InputBranch (-> respo.schema/Component) (:features :io)
         'comp-message $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-message (message)
             let
@@ -214,11 +215,11 @@
               (:none) (println "|no message target")
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'scroll-view! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn scroll-view! () (set-timeout! scroll-last! 100) &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'turn-codes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn turn-codes (acc code)
             if (= 0 code) (pad9 acc)
@@ -268,7 +269,7 @@
             when config/dev? $ println |Dispatch: op
             dispatch-resolved! op
           :examples $ []
-          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :io :js-ffi :state)
         'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-resolved! (op)
             reset! *reel $ match op
@@ -277,7 +278,7 @@
                 typed/record-op updater @*reel action (generate-id!) (shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/ResolvedOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/ResolvedOp (-> Unit) (:features :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (load-console-formatter!)
             println "|Running mode:" $ if config/dev? |dev |release
@@ -294,7 +295,7 @@
               , 1000
             println "|App started."
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
             narrow-element $ .unwrap $ query-selector |.app
@@ -303,7 +304,7 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch-resolved! control)
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             storage-set!
@@ -311,7 +312,7 @@
               format-cirru-edn $ &struct:to-map $ @*reel :store
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -322,14 +323,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration callback)
             set-interval! callback $ * 1000 duration
@@ -340,7 +341,7 @@
         'snippets $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn snippets () (println config/cdn?)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -396,19 +397,23 @@
           :examples $ []
           :schema $ quote StructDef
         'read-input-branch $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn read-input-branch (states)
-            InputBranch :cursor
-              decode-map-as
-                .unwrap $ get states :cursor
-                List respo.schema/CoordKey
-              , :data $ match (get states :data)
-                (:none) None
-                (:some data)
-                  Some $ decode-map-as
-                    if (struct? data) (&struct:to-map data) data
-                    , 'app.schema/InputData
+          :code $ quote $ defn read-input-branch (raw)
+            let
+                states $ decode-map-as raw $ Map respo.schema/CoordKey StateNode
+              InputBranch :cursor
+                decode-map-as
+                  .unwrap $ get states :cursor
+                  List respo.schema/CoordKey
+                , :data $ match (get states :data)
+                  (:none) None
+                  (:some data)
+                    match data
+                      (InputData input) (Some input)
+                      (Map legacy)
+                        Some $ decode-map-as legacy 'InputData
+                      _ $ raise |Expected-input-state
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic V) (-> InputBranch) (:generics V)
+          :schema $ quote $ Fn Input (-> InputBranch) (:generics Input)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
