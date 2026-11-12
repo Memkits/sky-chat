@@ -384,9 +384,13 @@
           :code $ quote $ defunion ResolvedOp Op reel.typed/Control
           :examples $ []
           :schema $ quote UnionDef
+        'StateNode $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion StateNode InputData String (List respo.schema/CoordKey) (Map respo.schema/CoordKey StateNode)
+          :examples $ []
+          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ Map Dynamic Dynamic
+            :states $ Map respo.schema/CoordKey app.schema/StateNode
             :token String
             :messages $ List app.schema/Message
           :examples $ []
@@ -422,7 +426,7 @@
               (:states cursor data)
                 assoc store :states $ decode-map-as
                   assoc-in (store :states) (conj cursor :data) data
-                  Map Dynamic Dynamic
+                  Map respo.schema/CoordKey app.schema/StateNode
               (:hydrate-storage data) data
               (:message message)
                 assoc store :messages $ conj (store :messages)
@@ -430,6 +434,19 @@
               (:rename token) (assoc store :token token)
           :examples $ []
           :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
+          :tests $ [] $ %{} 'TestEntry (:name |mixed-input-state-path)
+            :code $ quote $ let
+                input $ app.schema/InputData :content "|中文 🐈"
+                cursor $ [] :input |thread 7
+                next $ updater app.schema/store (app.schema/Op :states cursor input) |test 0
+                branch $ respo.core/>>
+                  respo.core/>>
+                    respo.core/>> (:states next) :input
+                    , |thread
+                  , 7
+                restored $ app.schema/read-input-branch branch
+              assert= cursor $ :cursor restored
+              assert= (Some input) (:data restored)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ app.schema :as app.schema

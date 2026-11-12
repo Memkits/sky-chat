@@ -8,7 +8,7 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.41.0。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.41.1。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 本轮不授权合并、生产部署或发版。
@@ -55,7 +55,7 @@ CI 明确要求完整 strict 状态 passed 且诊断为空，不仅检查命令�
 Enter 仍留下默认换行，见下方既有 #11，不把 Node 回调测试当作默认行为证明。
 内部使用真实 `reel.typed/State<Op,Store>` 和名义 Op，不再用 Unit 冒充 Reel Map。
 Store、Message、InputData 仍是真实 Struct，输入分支接受旧 Map 和当前 Struct；
-混合 key 的 UI 状态及异构事件 Map 值保留必要 Dynamic 边界，不伪装零债务。
+UI 状态以递归 StateNode union 保存，支持 Tag、String 与 Number 游标键。Respo 的分支读取仍在入口解码。
 字符编码算法未改，退役 `section-by` 别名并使用 `chunks`。
 
 原有 9 项业务测试保留，只适配 typed Reel、ChildPair 遍历及真实 StorageHost 合同。
