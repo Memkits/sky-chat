@@ -53,9 +53,9 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :state)
             -> respo.schema/Component
-            :features :io
+            :features :io :js-ffi :state
         'comp-header $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-header ()
             div
@@ -217,7 +217,11 @@
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'scroll-view! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn scroll-view! () (set-timeout! scroll-last! 100) &unit
+          :code $ quote $ defn scroll-view! ()
+            set-timeout!
+              fn () $ scroll-last!
+              , 100
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'turn-codes $ %{} 'CodeEntry (:doc |)
@@ -285,8 +289,9 @@
             render-app!
             add-watch! *reel :changes $ fn (reel previous) (render-app!)
             listen-devtools! |a on-control!
-            set-before-unload! $ fn (event) (persist-storage!)
-            repeat! 60 persist-storage!
+            set-before-unload! $ fn (event)
+              (fn () (persist-storage!))
+            repeat! 60 $ fn () $ persist-storage!
             set-timeout!
               fn ()
                 dispatch! $ app.schema/Op :message "|你好呀"
