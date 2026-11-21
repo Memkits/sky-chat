@@ -8,10 +8,9 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.42.1。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.44.0、Respo 0.19.13、Reel 0.11.5、UI 0.15.7 和 JS-FFI 0.2.19。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
-本轮不授权合并、生产部署或发版。
 
 此前五处 Map merge 改用 `.merge`，pad9 的 List count 改为 `.len`，
 十七处静态 CSS 叶子改为等价 String，减少样式异构值。
