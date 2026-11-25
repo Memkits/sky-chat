@@ -8,7 +8,7 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.44.0、Respo 0.19.13、Reel 0.11.5、UI 0.15.7 和 JS-FFI 0.2.19。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.45.1、Respo 0.19.18、Reel 0.11.9、UI 0.16.5 和 JS-FFI 0.2.24。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 
@@ -27,7 +27,7 @@ _TODO_
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
-Use the formal Calcit/procs **0.30.1** pair with `caps --ci --strict`,
+Use the formal Calcit/procs **0.45.1** pair with `caps --ci --strict`,
 `yarn install --immutable` and `caps verify --toolchain`. Only `calcit.cirru`
 and `deps.cirru` are canonical; CI rejects retired `compact.cirru` and
 `package.cirru`. The unused Markdown module was removed; message rendering,
@@ -41,7 +41,7 @@ input/send/clear flows, whole-store updates, DOM adapters and persistence.
 The original storage key is `workflow`, not the repository name. Startup does
 not restore storage; this existing behavior is unchanged.
 
-正式模块使用精确 tag：Reel 0.6.42、Respo 0.16.126、UI 0.8.1、JS-FFI 0.2.6。
+此前 0.30.1 迁移使用的精确 tag：Reel 0.6.42、Respo 0.16.126、UI 0.8.1、JS-FFI 0.2.6。
 升级后重新安装依赖、重启开发服务并刷新页面，不混用旧 runtime。
 此前迁移 3 处旧 Option helper 到 `.unwrap-or`，不改变默认值与字符算法；
 除两个内部事件适配器收紧为真实 `Map<Tag,Dynamic>` 参数外，其他 schema 不变；
