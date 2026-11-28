@@ -8,7 +8,7 @@ Demo http://r.tiye.me/Memkits/sky-chat/ .
 
 ### 本轮使用者影响
 
-配对使用正式 Calcit / procs 0.46.0、Respo 0.20.0、Reel 0.11.10、UI 0.16.6 和 JS-FFI 0.2.26。升级后重新安装依赖、重启开发服务并刷新。
+配对使用正式 Calcit / procs 0.47.1、Respo 0.20.1、Reel 0.11.11、UI 0.16.7 和 JS-FFI 0.2.26。升级后重新安装依赖、重启开发服务并刷新。
 聊天字符算法、示例消息、Store/Message/InputData/Op、存储 key、HUD 和部署路径保持。
 UI 升级可能带来样式差异，不承诺逐像素相同；启动不恢复存档、Enter 默认换行的既有行为不改。
 
@@ -27,7 +27,7 @@ _TODO_
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
-Use the formal Calcit/procs **0.46.0** pair with `caps --ci --strict`,
+Use the formal Calcit/procs **0.47.1** pair with `caps --ci --strict`,
 `yarn install --immutable` and `caps verify --toolchain`. Only `calcit.cirru`
 and `deps.cirru` are canonical; CI rejects retired `compact.cirru` and
 `package.cirru`. The unused Markdown module was removed; message rendering,
